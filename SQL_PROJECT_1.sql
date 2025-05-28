@@ -1,0 +1,126 @@
+
+
+create DATABASE ONLINE_BOOK_STORE;
+USE ONLINE_BOOK_STORE;
+
+create TABLE BOOKS(
+BOOKS_ID SERIAL primary KEY,
+TITLE VARCHAR(100),
+AUTHOR VARCHAR(100),
+GENRE VARCHAR(50),
+PUBLISHED_YEAR INT,
+PRICE numeric(10,2),
+STOCK INT
+);
+
+CREATE TABLE CUSTOMER(
+CUSTOMER_ID SERIAL primary KEY,
+NAME VARCHAR(100),
+EMAIL VARCHAR(50),
+PHONE VARCHAR(15),
+CITY VARCHAR(50),
+COUNTRY varchar(50)
+);
+
+CREATE TABLE ORDERS(
+ORDER_ID SERIAL PRIMARY KEY,
+CUSTOMER_ID INT references CUSTOMER(CUSTOMER_ID),
+BOOK_ID INT references BOOKS(BOOK_ID),
+ORDER_DATE DATE,
+QUANTITY INT,
+TOTAL_AMOUNT NUMERIC(10,2)
+);
+
+SELECT * FROM BOOKS;
+select * FROM CUSTOMER;
+SELECT * FROM ORDERS;
+
+#1 RETRIVES ALL BOOKS IN THE FICTION GENRE
+SELECT  *  FROM BOOKS
+WHERE GENRE='FICTION';
+
+#2 2) Find books published after the year 1950
+SELECT * FROM BOOKS
+WHERE PUBLISHED_YEAR>1950;
+
+# 3) List all customers from the Canada
+SELECT * FROM CUSTOMER
+WHERE COUNTRY="CANADA";
+
+# 4) Show orders placed in November 2023
+SELECT * FROM ORDERS
+WHERE ORDER_DATE between '2023-11-01' AND '2023-11-30';
+
+# 5) Retrieve the total stock of books available
+SELECT sum(STOCK) AS TOTAL_STOCK FROM BOOKS;
+
+# 6) Find the details of the most expensive book
+select PRICE FROM BOOKS ORDER BY PRICE desc;
+
+# 7) Show all customers who ordered more than 1 quantity of a book
+SELECT * FROM ORDERS
+WHERE QUANTITY>1;
+
+#8) Retrieve all orders where the total amount exceeds $20
+ SELECT * FROM ORDERS
+ WHERE TOTAL_AMOUNT>20;
+ 
+ #9) List all genres available in the Books table
+SELECT distinct GENRE FROM BOOKS;
+
+# 10) Find the book with the lowest stock
+SELECT * FROM BOOKS 
+ORDER BY STOCK ASC;
+
+#11) Calculate the total revenue generated from all orders
+SELECT SUM(TOTAL_AMOUNT) AS TOTAL_REVENUE FROM ORDERS;
+
+#12) Retrieve the total number of books sold for each genre
+SELECT B.GENRE, SUM(O.QUANTITY) AS TOTAL_BOOKS_SOLD FROM ORDERS O
+JOIN BOOKS B ON  O.BOOK_ID = B.BOOKS_ID
+group by B.GENRE;
+
+#13) Find the average price of books in the "Fantasy" genre
+SELECT GENRE,avg(PRICE) AS AVERGE_PRICE
+FROM BOOKS
+WHERE GENRE="FANTASY";
+
+#14) List customers who have placed at least 2 orders
+SELECT CUSTOMER_ID,COUNT(ORDER_ID) AS ORDER_COUNT
+FROM ORDERS
+GROUP BY CUSTOMER_ID
+HAVING COUNT(ORDER_ID)>=2;
+
+#15)Find the most frequently ordered book
+SELECT BOOK_ID,COUNT(ORDER_ID) AS ORDER_COUNT FROM ORDERS
+group by BOOK_ID
+ORDER BY ORDER_COUNT DESC;
+
+#16) Show the top 3 most expensive books of 'Fantasy' Genre 
+SELECT * FROM BOOKS
+WHERE GENRE="FANTASY";
+
+#17) Retrieve the total quantity of books sold by each author
+SELECT B.AUTHOR,sum(C.QUANTITY) as total_quantity FROM ORDERS C 
+JOIN BOOKS B ON B.BOOKS_ID=C.BOOK_ID
+group by B.AUTHOR;
+
+#18) List the cities where customers who spent over $30 are located
+select C.CITY,SUM(O.TOTAL_AMOUNT) AS SPENT FROM ORDERS O
+JOIN CUSTOMER C ON C.CUSTOMER_ID=O.CUSTOMER_ID
+WHERE O.TOTAL_AMOUNT>30
+GROUP BY C.CITY;
+
+#19) Find the customer who spent the most on orders
+SELECT C.CUSTOMER_ID,C.NAME,SUM(O.TOTAL_AMOUNT) AS MOST_SPENT FROM ORDERS O 
+JOIN CUSTOMER C
+ON C.CUSTOMER_ID=O.CUSTOMER_ID
+group by C.CUSTOMER_ID, C.NAME
+ORDER BY MOST_SPENT desc LIMIT 1;
+
+#20) Calculate the stock remaining after fulfilling all orders
+SELECT B.BOOKS_ID,B.TITLE,B.STOCK, coalesce(SUM(O.QUANTITY),0) AS ORDER_QUANTITY,
+B.STOCK-COALSECE(SUM(O.QUANITTY),0) AS REMAINING_QUANTITY
+FROM BOOKS B
+LEFT JOIN ORDERS O ON B.BOOKS_ID=O.BOOK_ID
+GROUP BY B.BOOKS_ID;
